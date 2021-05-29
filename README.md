@@ -4,7 +4,7 @@ A number of components (e.g. `<canvas/>`, `<svg/>`, `d3`, `fixed-data-tables`) u
 
 The react-grid-layout provides a grid layout, based on [css-grid](https://www.w3.org/TR/css-grid-1), that provides the grid-cell content with the cell's width and height. With react-grid-layout, when the size of the grid changes, you can pass the new grid-cell size to its pixel-size-based component, and have it rerender based on those new sizes.
 
-Check out the [css-grid](https://css-tricks.com/snippets/css/complete-guide-grid/) primer for more details on css-grid.
+Check out the [css-grid](https://css-tricks.com/snippets/css/complete-guide-grid/) primer for more details on css-grid, and the [react-grid-layout-example](https://github.com/robphilipp/react-grid-layout-example) repo for an example app.
 
 ## simple grid
 As a simple example, the code below shows a 3 by 3 `<Grid/>` which gets it overall size from the window dimensions, in this case, the `useWindowDimensions` hook. In this example, the cells (1, 1) and (2, 1) have a fixed with as set in the grid-track-template-builder with the `.addTrack(withPixels(200), withLineNames('nav'))` call, which translates to `[nav] 200px`. All the other cells are sized as `1fr`. The `rowGap` and `columnGap` are set to 5 pixels which is what renders the white borders in this example. The code doesn't specify a `gridTemplateRows` property, and so the grid calculates the number of rows based on the coordinates of the `<GridCell/>` children and adds them sized as `1fr`.
