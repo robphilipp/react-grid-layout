@@ -1,6 +1,6 @@
 {
-  "name": "react-resizeble-grid-layout",
-  "version": "0.1.2",
+  "name": "react-resizable-grid-layout",
+  "version": "0.1.3-snapshot",
   "description": "Grid layout for react that passes cell dimensions to children.",
   "author": "Rob Philipp",
   "homepage": "https://github.com/robphilipp/react-grid-layout",
