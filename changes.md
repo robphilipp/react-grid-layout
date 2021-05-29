@@ -1,6 +1,6 @@
 # change history
 
-## version 0.1.3 (renamed package)
+## version 0.1.4 (renamed package)
 LoL...fixed spelling mistake in package.
 
 ## version 0.1.2 (updated docs)
