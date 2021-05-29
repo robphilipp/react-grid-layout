@@ -28,4 +28,4 @@ export {
     gridTemplateAreasBuilder,
     isGridTemplateAreasNonEmpty
 } from './gridTemplateAreas'
-export {useWindowDimensions} from './WindowDimensionsProvider'
+export {useWindowDimensions, WindowDimensionsProvider} from './WindowDimensionsProvider'
