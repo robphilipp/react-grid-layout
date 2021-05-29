@@ -1,5 +1,8 @@
 # change history
 
+## version 0.1.5 (docs update)
+Updated the docs to include `npm install ...` for this module.
+
 ## version 0.1.4 (renamed package)
 LoL...fixed spelling mistake in package.
 
