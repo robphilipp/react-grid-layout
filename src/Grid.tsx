@@ -12,6 +12,7 @@ import {
     withGridTrack
 } from "./gridTemplates";
 import {emptyGridTemplateAreas, GridArea, GridTemplateAreas, isGridTemplateAreasNonEmpty} from "./gridTemplateAreas";
+import {GridErrorBoundary} from "./GridErrorBoundary";
 
 interface UseGridValues {
     width: number
@@ -145,6 +146,28 @@ export function Grid(props: Props): JSX.Element {
         .build()
 
     /**
+     * Attempts to calculate a react key for each grid-cell based on the properties set on the child.
+     * @param cellProps The properties of the child grid-cell
+     * @return A unique key for the grid-cell, or undefined and an error if no key could be calculated
+     * or found.
+     */
+    function cellKeyGenerator(cellProps: CellProps): string | undefined {
+        if (cellProps.cellKey) {
+            return `grid-cell-key-${cellProps.cellKey}`
+        }
+        if (cellProps.gridAreaName) {
+            return `grid-cell-area-${cellProps.gridAreaName}`
+        }
+        if (cellProps.row !== undefined && cellProps.column !== undefined) {
+            return `grid-cell-${cellProps.row}-${cellProps.column}`
+        }
+        throw new Error(
+            'Each <Grid/> child should have a unique react key. If you have not specified a (row, column) coordinate' +
+            ' or a grid-area name, then you ought to set the cellKey property for each <GridCell/>'
+        )
+    }
+
+    /**
      * Clones the children (or child) and adds the height, width, numRows, and numColumns props.
      * @param children An array of `GridCell` or a single JSX element
      * @return The enriched children
@@ -162,7 +185,7 @@ export function Grid(props: Props): JSX.Element {
         return childElements.map(child => cloneElement(
             child,
             {
-                // key: `grid-cell-${child.props.row}-${child.props.column}`,
+                key: cellKeyGenerator(child.props),
                 height, width,
                 numRows, numColumns
             }
@@ -207,6 +230,7 @@ const initialCellValues: UseGridCellValues = {
 const GridCellContext = createContext<UseGridCellValues>(initialCellValues)
 
 interface CellProps {
+    cellKey?: string
     column?: number | string
     columnsSpanned?: number
     row?: number | string
@@ -256,7 +280,10 @@ export function GridCell(props: CellProps): JSX.Element {
     const gridArea = gridCellPlacementFrom(gridTemplateAreas, gridAreaName)
     if (gridArea === undefined && (column === undefined || row === undefined)) {
         throw new Error(
-            `shit`
+            'Unable to determine the placement for the grid-cell. The placement of a <GridCell/> must be defined by a ' +
+            'grid-area name, or by specifying (row, column) coordinates as properties of the <GridCell/>. ' +
+            `gridAreaName: ${gridAreaName ? gridAreaName : '[undefined]'}; valid grid-area-names: [${Array.from(gridTemplateAreas.gridAreas.keys()).join(", ")}]; ` +
+            `row: ${row !== undefined ? row : '[undefined]'}; column: ${column !== undefined ? column : '[undefined]'};`
         )
     }
 
@@ -284,26 +311,30 @@ export function GridCell(props: CellProps): JSX.Element {
     const numColumns = gridTemplateColumns.trackList.length
     if (rowIndex < 1 || rowIndex > numRows) {
         throw new Error(
-            `<GridCell/> row must be greater than 1 and less than the number of rows; number rows: ${numRows}; row: ${row}`
+            `Unable to place <GridCell/> because row is out of range (1 ≤ row ≤ ${numRows}); ` +
+            `row-index: ${rowIndex}; column-index: ${columnIndex}`
         )
     }
-    if (spannedRows < 1) {
+    if (spannedRows < 1 || rowIndex + spannedRows - 1 > numRows) {
         throw new Error(
-            `The number of rows spanned by this <GridCell/> greater than 1; rows spanned: ${rowsSpanned}`
+            `Unable to place <GridCell/> because the row-index plus the spanned-rows cannot exceed the number of rows ` +
+            `(1 ≤ spanned-rows ≤ ${rowIndex + spannedRows - 1}); row-index: ${rowIndex}; column-index: ${columnIndex}; ` +
+            `spanned-rows: ${spannedRows}; num-rows: ${numRows}`
         )
     }
     if (columnIndex < 1 || columnIndex > numColumns) {
         throw new Error(
-            `<GridCell/> column must be greater than 1 and less than the number of columns; number columns: ${numColumns}; column: ${column}`
+            `Unable to place <GridCell/> because column is out of range (1 ≤ column ≤ ${numColumns}); ` +
+            `row-index: ${rowIndex}; column-index: ${columnIndex}`
         )
     }
-    if (spannedColumns < 1) {
+    if (spannedColumns < 1 || columnIndex + spannedColumns - 1 > numColumns) {
         throw new Error(
-            `The number of columns spanned by this <GridCell/> greater than 1; columns spanned: ${columnsSpanned}`
+            `Unable to place <GridCell/> because the column-index plus the spanned-columns cannot exceed the number of columns ` +
+            `(1 ≤ spanned-columns ≤ ${columnIndex + spannedColumns - 1}); row-index: ${rowIndex}; column-index: ${columnIndex}; ` +
+            `spannedColumns: ${spannedColumns}; numColumns: ${numColumns}`
         )
     }
-
-    // console.log("gan", gridAreaName, "ga", gridArea, "row", rowIndex, "column", columnIndex, "row-span", spannedRows, rowsSpanned, "col-span", spannedColumns, columnsSpanned)
 
     // update the style when in debug mode
     const debug: CSSProperties = showGrid ?
@@ -311,12 +342,6 @@ export function GridCell(props: CellProps): JSX.Element {
         {}
     const cellWidth = cellDimensionFor(width, columnIndex, columnGap, spannedColumns, gridTemplateColumns)
     const cellHeight = cellDimensionFor(height, rowIndex, rowGap, spannedRows, gridTemplateRows)
-    // console.log(
-    //     "cell (r, c)", row, column,
-    //     "dims (w, h)", cellWidth, cellHeight,
-    //     "spanned (r, c)", rowsSpanned, columnsSpanned,
-    //     "template (r, c)", gridTemplateRows.trackSizes(height, rowGap), gridTemplateColumns.trackSizes(width, columnGap)
-    // )
     const style = gridArea ?
         {
             gridArea: gridAreaName
@@ -328,27 +353,31 @@ export function GridCell(props: CellProps): JSX.Element {
             gridRowEnd: Math.min(rowIndex + spannedRows, numRows + 1),
         }
     return (
-        <GridCellContext.Provider value={{
-            width: cellWidth,
-            height: cellHeight,
-            row: rowIndex,
-            column: columnIndex,
-            rowsSpanned: spannedRows,
-            columnsSpanned: spannedColumns
+        <GridErrorBoundary onError={(error) => {
+            console.error(error)
         }}>
-            <div
-                key={`grid-cell-${rowIndex}-${columnIndex}`}
-                style={{
-                    height: cellHeight,
-                    width: cellWidth,
-                    ...style,
-                    ...debug,
-                    ...styles
-                }}
-            >
-                {cloneElement(children, {width: cellWidth, height: cellHeight})}
-            </div>
-        </GridCellContext.Provider>
+            <GridCellContext.Provider value={{
+                width: cellWidth,
+                height: cellHeight,
+                row: rowIndex,
+                column: columnIndex,
+                rowsSpanned: spannedRows,
+                columnsSpanned: spannedColumns
+            }}>
+                <div
+                    key={`grid-cell-${rowIndex}-${columnIndex}`}
+                    style={{
+                        height: cellHeight,
+                        width: cellWidth,
+                        ...style,
+                        ...debug,
+                        ...styles
+                    }}
+                >
+                    {cloneElement(children, {width: cellWidth, height: cellHeight})}
+                </div>
+            </GridCellContext.Provider>
+        </GridErrorBoundary>
     )
 }
 
@@ -375,4 +404,30 @@ export function useGridCell(): UseGridCellValues {
         throw new Error("useGridCell can only be used when the parent is a <GridCell/>")
     }
     return context
+}
+
+/**
+ * React hook used to provide information about the grid cell.
+ * @return The width and height of the grid cell and information about the cell's location and spanning
+ */
+export function useGridCellHeight(): number {
+    const context = useContext<UseGridCellValues>(GridCellContext)
+    const {width, height, row, column} = context
+    if (width === undefined || height === undefined || row === undefined || column === undefined) {
+        throw new Error("useGridCellHeight can only be used when the parent is a <GridCell/>")
+    }
+    return height
+}
+
+/**
+ * React hook used to provide information about the grid cell.
+ * @return The width and height of the grid cell and information about the cell's location and spanning
+ */
+export function useGridCellWidth(): number {
+    const context = useContext<UseGridCellValues>(GridCellContext)
+    const {width, height, row, column} = context
+    if (width === undefined || height === undefined || row === undefined || column === undefined) {
+        throw new Error("useGridCellWidth can only be used when the parent is a <GridCell/>")
+    }
+    return width
 }
