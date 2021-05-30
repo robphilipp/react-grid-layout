@@ -1,5 +1,9 @@
 # change history
 
+## version 0.1.6 (error boundaries)
+1. Added react error boundaries for a better user experience.
+2. Improved error messages.
+
 ## version 0.1.5 (docs update)
 Updated the docs to include `npm install ...` for this module.
 
