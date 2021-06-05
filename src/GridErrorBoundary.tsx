@@ -7,8 +7,12 @@ interface Props {
 
 interface GridErrorState {
     hasError: boolean
+    error?: Error
 }
 
+/**
+ * React error boundary for <Grid/>.
+ */
 export class GridErrorBoundary extends React.Component<Props, GridErrorState> {
     constructor(props: Props) {
         super(props);
@@ -17,7 +21,8 @@ export class GridErrorBoundary extends React.Component<Props, GridErrorState> {
 
     static getDerivedStateFromError(error: Error): GridErrorState {
         return {
-            hasError: true
+            hasError: true,
+            error
         }
     }
 
@@ -27,7 +32,11 @@ export class GridErrorBoundary extends React.Component<Props, GridErrorState> {
 
     render(): JSX.Element | Array<JSX.Element> {
         if (this.state.hasError) {
-            return <div>Something went wrong</div>
+            return <div>
+                Unable to render react-resizable-grid-layout; error: {this.state.error?.name};
+                message: {this.state.error?.message};
+                <p>{this.state.error?.stack}</p>
+            </div>
         }
         return this.props.children
     }
