@@ -175,13 +175,25 @@ export function Grid(props: Props): JSX.Element {
     function enrich(children: JSX.Element | Array<JSX.Element>): JSX.Element | Array<JSX.Element> {
         const childElements = Array.isArray(children) ? children : [children];
 
-        const invalidChildren = childElements.filter(child => !(child.type.name === "GridCell"));
+        const invalidChildren = childElements.filter(child => !(child.type.name === GridItem.name || child.type.name === GridCell.name));
         if (invalidChildren.length > 0) {
             throw new Error(
                 "<Grid/> allows only <GridCell/> as children; " +
                 `invalid children: ${invalidChildren.map(child => typeof child.type).join(", ")}`
             )
         }
+
+        // for now display use of the deprecated <GridCell/>
+        // noinspection JSDeprecatedSymbols
+        const deprecatedChildren = childElements
+            .filter(child => child.type.name === GridCell.name)
+            .map(child => child.props.gridAreaName ? child.props.gridAreaName : `(${child.props.row}, ${child.props.column})`)
+            .join(", ")
+        if (deprecatedChildren.length > 0) {
+            console.warn(`<GridCell/> is deprecated. Please use <GridItem/>: [${deprecatedChildren}]`)
+        }
+        // end of deprecated code guard
+
         return childElements.map(child => cloneElement(
             child,
             {
@@ -243,6 +255,7 @@ interface CellProps {
 }
 
 /**
+ * @deprecated use {@link GridItem} instead
  * A cell in the <Grid/> whose location and size are controlled by the <Grid/> parent. The parent <Grid/>
  * component provides the width and height of the entire area it manages. The <GridCell/> uses the width
  * and height from the parent, its grid location and the row and column spans, to determine the width and
@@ -255,6 +268,22 @@ interface CellProps {
  * @constructor
  */
 export function GridCell(props: CellProps): JSX.Element {
+  return GridItem(props)
+}
+
+/**
+ * A cell in the <Grid/> whose location and size are controlled by the <Grid/> parent. The parent <Grid/>
+ * component provides the width and height of the entire area it manages. The <GridCell/> uses the width
+ * and height from the parent, its grid location and the row and column spans, to determine the width and
+ * height of the <GridItem/>. It passes the calculated width and height to it child.
+ *
+ * Uses CSS grid underneath.
+ * @param props The properties defining the location and row and column spans and the width and height
+ * managed by the parent <Grid/>
+ * @return A sized <GridItem/>
+ * @constructor
+ */
+export function GridItem(props: CellProps): JSX.Element {
     const {
         column,
         columnsSpanned,

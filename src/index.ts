@@ -1,4 +1,4 @@
-export {Grid, GridCell, useGridCell, useGridCellWidth, useGridCellHeight} from './Grid'
+export {Grid, GridCell, GridItem, useGridCell, useGridCellWidth, useGridCellHeight} from './Grid'
 export {Dimensions} from './dimensions'
 export {
     withPixels,
