@@ -13,19 +13,21 @@ npm install react-resizable-grid-layout
 ```
 
 ## basic concepts
-The [css-grid](https://www.w3.org/TR/css-grid-1) provides a way to define the grid layout through the `grid-template-rows` and `grid-template-columns`. Each of these define the [grid-lines](https://www.w3.org/TR/css-grid-1/#grid-line-concept) and [grid-tracks](https://www.w3.org/TR/css-grid-1/#grid-track-concept) for the row or column axes of the layout. The intersection of a **row** grid-track and a **column** grid-track is a [grid-cell](https://www.w3.org/TR/css-grid-1/#grid-track-concept). A contiguous square composed of grid-cells is a `grid-item`. Of note is that the `<GridCell/>` component in `react-resizable-grid-layout` represents the `grid-item` defined by css-grid.
+The [css-grid](https://www.w3.org/TR/css-grid-1) provides a way to define the grid layout through the `grid-template-rows` and `grid-template-columns`. Each of these define the [grid-lines](https://www.w3.org/TR/css-grid-1/#grid-line-concept) and [grid-tracks](https://www.w3.org/TR/css-grid-1/#grid-track-concept) for the row or column axes of the layout. The intersection of a **row** grid-track and a **column** grid-track is a [grid-cell](https://www.w3.org/TR/css-grid-1/#grid-track-concept). A contiguous square composed of grid-cells is a `grid-item`. A [grid-area](https://www.w3.org/TR/css-grid-1/#grid-area-concept) is used for the placement of grid-items using names instead of (row, column) and row and column spanning.
 
 > `grid-lines` are used to name the lines between the rows (and columns) of a grid. 
 
-> a `grid-track` is the space between two `grid-lines` (what you would normally think of as a row (or column), and the grid-lines do not necessarily need to be named)
+> a `grid-track` is the space between two `grid-lines` (what you would normally think of as a row (or column), and the grid-lines do not necessarily need to be named).
  
-> a `grid-cell` is the intersection of a row `grid-track` and a column `grid-track`
+> a `grid-cell` is the intersection of a row `grid-track` and a column `grid-track`. In `react-resizable-grid-layout`, a `<Grid/>` represents a css-grid.
 
-> a `grid-item` is a contiguous rectangle of `grid-cells`. In `react-resizable-grid-layout`, a `<GridCell/>` respresents a css-grid `grid-item`.
+> a `grid-item` is a contiguous rectangle of `grid-cells`. In `react-resizable-grid-layout`, a `<GridItem/>` represents a css-grid `grid-item`.
+
+> a `grid-area` is a named `grid-item`.
 
 
 ## best practices
-The `<Grid/>` calculates the dimensions (width and height) of each `<GridCell/>` using on the `grid-template-columns` and `grid-template-rows` properties (specified with the `gridTrackTemplateBuilder`). In order to provide absolute (pixel) dimensions, the `<Grid/>` also needs its own the absolute dimensions. The `react-grid-layout` (`react-resizable-grid-layout` in npm) provides a `WindowDimensionsProvider` which is intended to wrap your entire application. The `WindowDimensionsProvider` listens for window resize events, and provides the window dimensions to children through the `useWindowDimensions` hook. 
+The `<Grid/>` calculates the dimensions (width and height) of each `<GridItem/>` using on the `grid-template-columns` and `grid-template-rows` properties (specified with the `gridTrackTemplateBuilder`). In order to provide absolute (pixel) dimensions, the `<Grid/>` also needs its own the absolute dimensions. The `react-grid-layout` (`react-resizable-grid-layout` in npm) provides a `WindowDimensionsProvider` which is intended to wrap your entire application. The `WindowDimensionsProvider` listens for window resize events, and provides the window dimensions to children through the `useWindowDimensions` hook. 
 
 ```typescript jsx
 // index.tsx
@@ -69,7 +71,7 @@ body {
 If you're having sizing issues, you may also want to set the height to the full viewport height and the width to the full viewport width.
 
 ## nesting grids
-The `<Grid/>` component can be nested. Typically, the application has an "outer" `<Grid/>` for the overall application layout. The "outer" `<Grid/>` may have one or more nested grids representing different views. Just like the "outer" `<Grid/>`, a nested `<Grid/>` needs its dimensions for calculating the dimensions of its children `<GridCell/>`s. So how does a nested `<Grid/>` get its size? With the `useGridCell` hook (of course).
+The `<Grid/>` component can be nested. Typically, the application has an "outer" `<Grid/>` for the overall application layout. The "outer" `<Grid/>` may have one or more nested grids representing different views. Just like the "outer" `<Grid/>`, a nested `<Grid/>` needs its dimensions for calculating the dimensions of its children `<GridItem/>`s. So how does a nested `<Grid/>` get its size? With the `useGridCell` hook (of course).
 
 ```typescript jsx
 // App.tsx
@@ -80,30 +82,30 @@ function App(): JSX.Element {
             dimensionsSupplier={useWindowDimensions}
             // ...
         >
-            <GridCell row={1} column={1}><CellContents/></GridCell>
+            <GridItem row={1} column={1}><CellContents/></GridItem>
             // ...
-            <GridCell row={1} column={3} rowsSpanned={3}>
+            <GridItem row={1} column={3} rowsSpanned={3}>
                 <Grid
                     // *** the `useGridCell` hook passes the grid-cell 
                     // dimensions to the caller ***
                     dimensionsSupplier={useGridCell}
                     // ...
                 >
-                    <GridCell column={1} row={1}><CellContents/></GridCell>
+                    <GridItem column={1} row={1}><CellContents/></GridItem>
                     // ...
-                    <GridCell column={2} row={1}><CellContents/></GridCell>
+                    <GridItem column={2} row={1}><CellContents/></GridItem>
                 </Grid>
-            </GridCell>
+            </GridItem>
             // ...
-            <GridCell row={3} column={1} columnsSpanned={2}><CellContents/></GridCell>
+            <GridItem row={3} column={1} columnsSpanned={2}><CellContents/></GridItem>
         </Grid>
     )
 }
 ```
 
-As long as the caller of the `useGridCell` hook is a child of a `<GridCell/>`, the hook will return the dimensions of the `<GridCell/>` that is the caller's parent.
+As long as the caller of the `useGridCell` hook is a child of a `<GridItem/>`, the hook will return the dimensions of the `<GridItem/>` that is the caller's parent.
 
-## grid-template builders
+## grid-template builder
 The `gridTrackTemplateBuilder` function provides a fluent interface for defining a grid-template-row and grid-template-column. The `gridTrackTemplateBuilder` function returns a `GridTrackTemplateBuilder` object with three functions:
 
 > `addTrack`<br>
@@ -173,9 +175,91 @@ The `repeatFor` builder function uses the `withGridTrack` helper function that c
 > withGridTrack(withFraction(1), 'last one', 'another one', 'an accident')
 > ```
 
+## grid-template-area builder
+A `grid-area` is a named space for placing grid items. The `gridTemplateAreasBuilder` is used to name the areas in the grid. The `gridTemplateAreasBuilder` has only two functions.
+
+After defining the grid-areas in the `<Grid/>`, the `<GridItems/>` can reference them by name.
+```typescript jsx
+// App.tsx
+function App(): JSX.Element {
+    // ...
+    return (
+        <Grid
+            dimensionsSupplier={useWindowDimensions}
+            gridTemplateAreas={gridTemplateAreasBuilder()
+                .addArea('header', gridArea(1, 1, 1, 3))
+                .addArea('sidebar', gridArea(2, 1))
+                .addArea('main', gridArea(2, 2))
+                .addArea('aside', gridArea(2, 3))
+                .addArea('footer', gridArea(3, 1, 1, 3))
+                .build()
+            }
+            gridTemplateColumns={gridTrackTemplateBuilder()
+                .addTrack(withPixels(150))
+                .addTrack(withFraction(1))
+                .addTrack(withPixels(100))
+                .build()
+            }
+            gridTemplateRows={gridTrackTemplateBuilder()
+                .addTrack(withPixels(65))
+                .addTrack(withFraction(1))
+                .addTrack(withPixels(40))
+                .build()
+            }
+        >
+            <GridItem gridAreaName='header'>
+                <CellContents/>
+            </GridItem>
+            <GridItem gridAreaName='sidebar'>
+                <CellContents/>
+            </GridItem>
+            <GridItem gridAreaName='main'>
+                // ...
+            </GridItem>
+            <GridItem gridAreaName='aside'>
+                <CellContents/>
+            </GridItem>
+            <GridItem gridAreaName='footer'>
+                <CellContents/>
+            </GridItem>
+        </Grid>
+    )
+}
+```
+
+> `addArea`<br>
+> *Adds a named grid-area to the grid*<br>
+> `(name: string, area: GridArea) => GridTemplateAreasBuilder`<br>
+> ```typescript jsx
+> // example
+> gridTemplateAreasBuilder()
+>   .addArea('header', gridArea(1, 1, 1, 3))
+>   .addArea('sidebar', gridArea(2, 1))
+>   .addArea('main', gridArea(2, 2))
+>   .addArea('aside', gridArea(2, 3))
+>   .addArea('footer', gridArea(3, 1, 1, 3))
+>   .build()
+> ```
+
+> `build`<br>
+> *Builds and returns the `GridTemplateAreas`*<br>
+> `() => GridTemplateAreas`<br>
+
+### helper function
+The `gridArea` is the only helper function used by the `gridTemplateAreasBuilder`.
+
+> `gridArea`<br>
+> *Constructs a grid area at the grid's (row, column) that spans the specified number of rows and columns*<br>
+> `(row: number, column: number, spannedRows?: number, spannedColumns?: number) => GridArea`
+> ```typescript jsx
+> // grid-area at row = 1, column = 1, and spans 1 row and 1 column
+> gridArea(1, 1)
+> // grid-area at row = 1, column = 3, and spans 2 rows and  columns
+> gridArea(1, 3, 2, 4)
+> ```
 
 ## simple grid
-As a simple example, the code below shows a 3 by 3 `<Grid/>` which gets it overall size from the window dimensions, in this case, the `useWindowDimensions` hook. The `useWindowDimensions` hook requires your grid to be wrapped in a `<WindowDimensionsProvider/>`. In this example, the cells (1, 1) and (2, 1) have a fixed with as set in the grid-track-template-builder with the `.addTrack(withPixels(200), withLineNames('nav'))` call, which translates to `[nav] 200px`. All the other cells are sized as `1fr`. The `rowGap` and `columnGap` are set to 5 pixels which is what renders the white borders in this example. The code doesn't specify a `gridTemplateRows` property, and so the grid calculates the number of rows based on the coordinates of the `<GridCell/>` children and adds them sized as `1fr`.
+As a simple example, the code below shows a 3 by 3 `<Grid/>` which gets it overall size from the window dimensions, in this case, the `useWindowDimensions` hook. The `useWindowDimensions` hook requires your grid to be wrapped in a `<WindowDimensionsProvider/>`. In this example, the cells (1, 1) and (2, 1) have a fixed with as set in the grid-track-template-builder with the `.addTrack(withPixels(200), withLineNames('nav'))` call, which translates to `[nav] 200px`. All the other cells are sized as `1fr`. The `rowGap` and `columnGap` are set to 5 pixels which is what renders the white borders in this example. The code doesn't specify a `gridTemplateRows` property, and so the grid calculates the number of rows based on the coordinates of the `<GridItem/>` children and adds them sized as `1fr`.
 
 When placing the grid-cells, you can also specify that they span several rows or columns. In this example, cell (3, 1) is set to span 2 columns, and cell (1, 3) is set to span 3 rows.
 
@@ -193,24 +277,24 @@ function App() {
             columnGap={5}
             showGrid={false}
         >
-            <GridCell row={1} column={1}>
+            <GridItem row={1} column={1}>
                 <CellContents/>
-            </GridCell>
-            <GridCell row={1} column={2}>
+            </GridItem>
+            <GridItem row={1} column={2}>
                 <CellContents/>
-            </GridCell>
-            <GridCell row={1} column={3} rowsSpanned={3}>
+            </GridItem>
+            <GridItem row={1} column={3} rowsSpanned={3}>
                 <CellContents/>
-            </GridCell>
-            <GridCell row={2} column={1}>
+            </GridItem>
+            <GridItem row={2} column={1}>
                 <CellContents/>
-            </GridCell>
-            <GridCell row={2} column={2}>
+            </GridItem>
+            <GridItem row={2} column={2}>
                 <CellContents/>
-            </GridCell>
-            <GridCell row={3} column={1} columnsSpanned={2}>
+            </GridItem>
+            <GridItem row={3} column={1} columnsSpanned={2}>
                 <CellContents/>
-            </GridCell>
+            </GridItem>
         </Grid>
     )
 }
@@ -280,13 +364,13 @@ function App() {
             columnGap={5}
             showGrid={false}
         >
-            <GridCell row={1} column={1}>
+            <GridItem row={1} column={1}>
                 <CellContents/>
-            </GridCell>
-            <GridCell row={1} column={2}>
+            </GridItem>
+            <GridItem row={1} column={2}>
                 <CellContents/>
-            </GridCell>
-            <GridCell row={1} column={3} rowsSpanned={3}>
+            </GridItem>
+            <GridItem row={1} column={3} rowsSpanned={3}>
                 <Grid
                     dimensionsSupplier={useGridCell}
                     gridTemplateColumns={gridTrackTemplateBuilder()
@@ -295,32 +379,32 @@ function App() {
                     columnGap={1}
                     rowGap={1}
                 >
-                    <GridCell column={1} row={1}>
+                    <GridItem column={1} row={1}>
                         <CellContents/>
-                    </GridCell>
-                    <GridCell column={1} row={2}>
+                    </GridItem>
+                    <GridItem column={1} row={2}>
                         <CellContents/>
-                    </GridCell>
-                    <GridCell column={3} row={3}>
+                    </GridItem>
+                    <GridItem column={3} row={3}>
                         <CellContents/>
-                    </GridCell>
-                    <GridCell column={1} row={4}>
+                    </GridItem>
+                    <GridItem column={1} row={4}>
                         <CellContents/>
-                    </GridCell>
-                    <GridCell column={2} row={1} rowsSpanned={4}>
+                    </GridItem>
+                    <GridItem column={2} row={1} rowsSpanned={4}>
                         <CellContents/>
-                    </GridCell>
+                    </GridItem>
                 </Grid>
-            </GridCell>
-            <GridCell row={2} column={1}>
+            </GridItem>
+            <GridItem row={2} column={1}>
                 <CellContents/>
-            </GridCell>
-            <GridCell row={2} column={2}>
+            </GridItem>
+            <GridItem row={2} column={2}>
                 <CellContents/>
-            </GridCell>
-            <GridCell row={3} column={1} columnsSpanned={2}>
+            </GridItem>
+            <GridItem row={3} column={1} columnsSpanned={2}>
                 <CellContents/>
-            </GridCell>
+            </GridItem>
         </Grid>
     )
 }
@@ -383,7 +467,7 @@ A common app layout has:
 * possibly an aside panel on the right-hand side of the page, 
 * a main content nested snugly in the center. 
   
-It would also be nice to name these areas and reference them by name. `grid-areas` are a basic feature of `css-grid` which is implemented in the `<Grid/>` component. The following example code shows how to do this with `<Grid/>` and also how to control which `<GridCells/>` are displayed using the `<GridCell/>`'s `isVisible` property.
+It would also be nice to name these areas and reference them by name. `grid-areas` are a basic feature of `css-grid` which is implemented in the `<Grid/>` component. The following example code shows how to do this with `<Grid/>` and also how to control which `<GridCells/>` are displayed using the `<GridItem/>`'s `isVisible` property.
 
 Notice that we have added a `gridTemplateAreas` property to outer the `<Grid/>`. Using the `gridTemplateAreasBuilder` we can add areas to the grid using the `addArea(name, area)` method. A grid-area has a name associated with an area (the set of cells bounded by 4 grid-lines). The `gridArea(row, col, spannedRows, spannedCols)` helper function makes it easy to define the area. All we need to do is specify the starting (row, column) and then the number of rows and columns the area spans. In our example, we've added grid-area called `header` that starts in the first row and column of the grid, spans 1 row, and spans all the columns of the grid. The `sidebar` starts on the second row of the first column and spans only one row and one column (the default values for row and column spanning).
 
@@ -429,42 +513,42 @@ function App() {
             columnGap={5}
             showGrid={false}
         >
-            <GridCell gridAreaName='header'>
+            <GridItem gridAreaName='header'>
                 <CellContents/>
-            </GridCell>
-            <GridCell gridAreaName='sidebar'>
+            </GridItem>
+            <GridItem gridAreaName='sidebar'>
                 <CellContents/>
-            </GridCell>
-            <GridCell gridAreaName='main'>
+            </GridItem>
+            <GridItem gridAreaName='main'>
                 <Grid
                     dimensionsSupplier={useGridCell}
                     gridTemplateColumns={createNestedGridTemplateColumn(showLast)}
                     columnGap={1}
                     rowGap={1}
                 >
-                    <GridCell column={1} row={1}>
+                    <GridItem column={1} row={1}>
                         <CellContents/>
-                    </GridCell>
-                    <GridCell column={1} row={2}>
+                    </GridItem>
+                    <GridItem column={1} row={2}>
                         <CellContents/>
-                    </GridCell>
-                    <GridCell column={3} row={3} isVisible={showLast}>
+                    </GridItem>
+                    <GridItem column={3} row={3} isVisible={showLast}>
                         <CellContents showRemoveButton={true} onRemoveButtonClick={() => setShowLast(false)}/>
-                    </GridCell>
-                    <GridCell column={1} row={4}>
+                    </GridItem>
+                    <GridItem column={1} row={4}>
                         <CellContents/>
-                    </GridCell>
-                    <GridCell column={2} row={1} rowsSpanned={4}>
+                    </GridItem>
+                    <GridItem column={2} row={1} rowsSpanned={4}>
                         <CellContents/>
-                    </GridCell>
+                    </GridItem>
                 </Grid>
-            </GridCell>
-            <GridCell gridAreaName='aside'>
+            </GridItem>
+            <GridItem gridAreaName='aside'>
                 <CellContents/>
-            </GridCell>
-            <GridCell gridAreaName='footer'>
+            </GridItem>
+            <GridItem gridAreaName='footer'>
                 <CellContents/>
-            </GridCell>
+            </GridItem>
         </Grid>
     )
 }
