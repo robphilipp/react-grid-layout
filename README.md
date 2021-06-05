@@ -12,6 +12,18 @@ To include in your project
 npm install react-resizable-grid-layout
 ```
 
+## basic concepts
+The [css-grid](https://www.w3.org/TR/css-grid-1) provides a way to define the grid layout through the `grid-template-rows` and `grid-template-columns`. Each of these define the [grid-lines](https://www.w3.org/TR/css-grid-1/#grid-line-concept) and [grid-tracks](https://www.w3.org/TR/css-grid-1/#grid-track-concept) for the row or column axes of the layout. The intersection of a **row** grid-track and a **column** grid-track is a [grid-cell](https://www.w3.org/TR/css-grid-1/#grid-track-concept). A contiguous square composed of grid-cells is a `grid-item`. Of note is that the `<GridCell/>` component in `react-resizable-grid-layout` represents the `grid-item` defined by css-grid.
+
+> `grid-lines` are used to name the lines between the rows (and columns) of a grid. 
+
+> a `grid-track` is the space between two `grid-lines` (what you would normally think of as a row (or column), and the grid-lines do not necessarily need to be named)
+ 
+> a `grid-cell` is the intersection of a row `grid-track` and a column `grid-track`
+
+> a `grid-item` is a contiguous rectangle of `grid-cells`. In `react-resizable-grid-layout`, a `<GridCell/>` respresents a css-grid `grid-item`.
+
+
 ## best practices
 The `<Grid/>` calculates the dimensions (width and height) of each `<GridCell/>` using on the `grid-template-columns` and `grid-template-rows` properties (specified with the `gridTrackTemplateBuilder`). In order to provide absolute (pixel) dimensions, the `<Grid/>` also needs its own the absolute dimensions. The `react-grid-layout` (`react-resizable-grid-layout` in npm) provides a `WindowDimensionsProvider` which is intended to wrap your entire application. The `WindowDimensionsProvider` listens for window resize events, and provides the window dimensions to children through the `useWindowDimensions` hook. 
 
@@ -56,7 +68,7 @@ body {
 ```
 If you're having sizing issues, you may also want to set the height to the full viewport height and the width to the full viewport width.
 
-### nesting grids
+## nesting grids
 The `<Grid/>` component can be nested. Typically, the application has an "outer" `<Grid/>` for the overall application layout. The "outer" `<Grid/>` may have one or more nested grids representing different views. Just like the "outer" `<Grid/>`, a nested `<Grid/>` needs its dimensions for calculating the dimensions of its children `<GridCell/>`s. So how does a nested `<Grid/>` get its size? With the `useGridCell` hook (of course).
 
 ```typescript jsx
@@ -90,6 +102,77 @@ function App(): JSX.Element {
 ```
 
 As long as the caller of the `useGridCell` hook is a child of a `<GridCell/>`, the hook will return the dimensions of the `<GridCell/>` that is the caller's parent.
+
+## grid-template builders
+The `gridTrackTemplateBuilder` function provides a fluent interface for defining a grid-template-row and grid-template-column. The `gridTrackTemplateBuilder` function returns a `GridTrackTemplateBuilder` object with three functions:
+
+> `addTrack`<br>
+> *Adds a track to the grid layout, and optionally names for the grid-line to the left of the grid track.<br>*
+> `(track: GridTrackSize, lineNames?: GridLineNames) => GridTrackTemplateBuilder`<br>
+> Accepts a `GridTrackSize`, and an optional set of grid-line names.<br>
+> ```typescript jsx
+> // example
+> gridTrackTemplateBuilder()
+>     .addTrack(withPixels(200), withLineNames('area 51'))
+>     .addTrack(withFraction(1), withLineNames('area 52'))
+>     .addTrack(withPercentage(20), withLineNames('area 53'))
+>     .build()
+> ```
+
+> `repeatFor`<br>
+> *Adds the specified grid-track the specified number of times*<br>
+> `(times: number, ...track: Array<GridTrack>) => GridTrackTemplateBuilder`<br>
+> Accepts the number of times to repeat the specified grid tracks, and a variable argument list of `<GridTrack>`.
+> ```typescript jsx
+> // example
+> gridTrackTemplateBuilder()
+>     .repeatFor(2, withGridTrack(withFraction(1), 'last one'))
+>     .repeatFor(2, withGridTrack(withPixels(1000), 'middle one'))
+>     .repeatFor(6, withGridTrack(withPercentage(10), 'first one'))
+>     .build()
+> ```
+
+> `build`<br> 
+> *Builds and returns a `GridTrackTemplate` for the rows or columns*<br>
+> `(lastLineNames?: GridLineNames) => GridTrackTemplate`<br>
+> Accepts optional grid-line names for the last grid-line in the grid (i.e. the one to the right of all the grid-tracks).
+
+### helper functions
+There are a number of helper functions listed in the examples in this document.
+
+> `withPixels(pixels: number): GridTrackSize`<br>
+> Returns a grid-track size with a fixed number of pixels.
+
+> `withFraction(fraction: number): GridTrackSize`<br>
+> Returns a grid-track whose size fills the available space after all fixed-size and percentage-size track have been allocated.
+
+> `withPercentage(percentage: number): GridTrackSize`<br>
+> Returns a grid-track whose size is a specified fraction of the available space.
+
+Each of these functions returns a `GridTrackSize` object.
+```typescript jsx
+interface GridTrackSize {
+    amount?: number
+    sizeType: TrackSizeType
+    asString: () => string
+}
+```
+
+> `withLineNames(...names: string[]): GridLineNames`<br>
+> Returns a `GridLineNames` object holding the specified names for the grid-line
+> ```typescript jsx
+> // example
+> const names = withLineNames('name1', 'name2', 'name3')
+> ```
+
+The `repeatFor` builder function uses the `withGridTrack` helper function that creates a `GridTrack`
+> `withGridTrack(gridTrackSize: GridTrackSize, ...names: string[]): GridTrack`<br>
+> Accepts a `GridTrackSize` (use the `withPixels`, `withFraction`, or `withPercentage` helper functions), and a variable list of grid-line names for the grid-line just to the left of the grid-track being defined.
+> ```typescript jsx
+> // example
+> withGridTrack(withFraction(1), 'last one', 'another one', 'an accident')
+> ```
+
 
 ## simple grid
 As a simple example, the code below shows a 3 by 3 `<Grid/>` which gets it overall size from the window dimensions, in this case, the `useWindowDimensions` hook. The `useWindowDimensions` hook requires your grid to be wrapped in a `<WindowDimensionsProvider/>`. In this example, the cells (1, 1) and (2, 1) have a fixed with as set in the grid-track-template-builder with the `.addTrack(withPixels(200), withLineNames('nav'))` call, which translates to `[nav] 200px`. All the other cells are sized as `1fr`. The `rowGap` and `columnGap` are set to 5 pixels which is what renders the white borders in this example. The code doesn't specify a `gridTemplateRows` property, and so the grid calculates the number of rows based on the coordinates of the `<GridCell/>` children and adds them sized as `1fr`.
