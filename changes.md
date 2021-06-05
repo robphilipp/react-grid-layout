@@ -1,5 +1,8 @@
 # change history
 
+## version 0.1.7 (docs)
+Updated docs and cleaned code.
+
 ## version 0.1.6 (error boundaries)
 1. Added react error boundaries for a better user experience.
 2. Improved error messages.
