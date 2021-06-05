@@ -1,5 +1,9 @@
 # change history
 
+## version 0.2.0 (deprecated GridCell)
+1. Deprecated GridCell and replaced it with GridItem to align with the css-grid terminology. Added warnings when the GridCell is used.
+2. Updated the docs to replace GridCell with GridItem and added section on grid-areas.
+
 ## version 0.1.7 (docs)
 Updated docs and cleaned code.
 
