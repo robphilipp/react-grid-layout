@@ -353,9 +353,7 @@ export function GridCell(props: CellProps): JSX.Element {
             gridRowEnd: Math.min(rowIndex + spannedRows, numRows + 1),
         }
     return (
-        <GridErrorBoundary onError={(error) => {
-            console.error(error)
-        }}>
+        <GridErrorBoundary onError={(error) => console.error(error)}>
             <GridCellContext.Provider value={{
                 width: cellWidth,
                 height: cellHeight,

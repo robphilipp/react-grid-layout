@@ -12,8 +12,87 @@ To include in your project
 npm install react-resizable-grid-layout
 ```
 
+## best practices
+The `<Grid/>` calculates the dimensions (width and height) of each `<GridCell/>` using on the `grid-template-columns` and `grid-template-rows` properties (specified with the `gridTrackTemplateBuilder`). In order to provide absolute (pixel) dimensions, the `<Grid/>` also needs its own the absolute dimensions. The `react-grid-layout` (`react-resizable-grid-layout` in npm) provides a `WindowDimensionsProvider` which is intended to wrap your entire application. The `WindowDimensionsProvider` listens for window resize events, and provides the window dimensions to children through the `useWindowDimensions` hook. 
+
+```typescript jsx
+// index.tsx
+import { WindowDimensionsProvider } from 'react-resizable-grid-layout/dist/src/WindowDimensionsProvider';
+
+ReactDOM.render(
+    <React.StrictMode>
+        <WindowDimensionsProvider>
+            <App />
+        </WindowDimensionsProvider>
+    </React.StrictMode>,
+    document.getElementById('root')
+)
+
+// App.tsx
+function App(): JSX.Element {
+    // ...
+    return (
+        <Grid
+            dimensionsSupplier={useWindowDimensions}
+            // ...
+        >...</Grid>
+    )
+}
+
+```
+
+### remove margins and padding
+The outermost `<Grid/>`, the one representing the application layout, should use up the entire window. Therefore, it is important to zero-out any margins and padding.
+
+```css
+/* index.css */
+body {
+    margin: 0;
+    padding: 0;
+    /* optional */
+    height: 100vh;
+    width: 100vw;
+}
+```
+If you're having sizing issues, you may also want to set the height to the full viewport height and the width to the full viewport width.
+
+### nesting grids
+The `<Grid/>` component can be nested. Typically, the application has an "outer" `<Grid/>` for the overall application layout. The "outer" `<Grid/>` may have one or more nested grids representing different views. Just like the "outer" `<Grid/>`, a nested `<Grid/>` needs its dimensions for calculating the dimensions of its children `<GridCell/>`s. So how does a nested `<Grid/>` get its size? With the `useGridCell` hook (of course).
+
+```typescript jsx
+// App.tsx
+function App(): JSX.Element {
+    // ...
+    return (
+        <Grid
+            dimensionsSupplier={useWindowDimensions}
+            // ...
+        >
+            <GridCell row={1} column={1}><CellContents/></GridCell>
+            // ...
+            <GridCell row={1} column={3} rowsSpanned={3}>
+                <Grid
+                    // *** the `useGridCell` hook passes the grid-cell 
+                    // dimensions to the caller ***
+                    dimensionsSupplier={useGridCell}
+                    // ...
+                >
+                    <GridCell column={1} row={1}><CellContents/></GridCell>
+                    // ...
+                    <GridCell column={2} row={1}><CellContents/></GridCell>
+                </Grid>
+            </GridCell>
+            // ...
+            <GridCell row={3} column={1} columnsSpanned={2}><CellContents/></GridCell>
+        </Grid>
+    )
+}
+```
+
+As long as the caller of the `useGridCell` hook is a child of a `<GridCell/>`, the hook will return the dimensions of the `<GridCell/>` that is the caller's parent.
+
 ## simple grid
-As a simple example, the code below shows a 3 by 3 `<Grid/>` which gets it overall size from the window dimensions, in this case, the `useWindowDimensions` hook. In this example, the cells (1, 1) and (2, 1) have a fixed with as set in the grid-track-template-builder with the `.addTrack(withPixels(200), withLineNames('nav'))` call, which translates to `[nav] 200px`. All the other cells are sized as `1fr`. The `rowGap` and `columnGap` are set to 5 pixels which is what renders the white borders in this example. The code doesn't specify a `gridTemplateRows` property, and so the grid calculates the number of rows based on the coordinates of the `<GridCell/>` children and adds them sized as `1fr`.
+As a simple example, the code below shows a 3 by 3 `<Grid/>` which gets it overall size from the window dimensions, in this case, the `useWindowDimensions` hook. The `useWindowDimensions` hook requires your grid to be wrapped in a `<WindowDimensionsProvider/>`. In this example, the cells (1, 1) and (2, 1) have a fixed with as set in the grid-track-template-builder with the `.addTrack(withPixels(200), withLineNames('nav'))` call, which translates to `[nav] 200px`. All the other cells are sized as `1fr`. The `rowGap` and `columnGap` are set to 5 pixels which is what renders the white borders in this example. The code doesn't specify a `gridTemplateRows` property, and so the grid calculates the number of rows based on the coordinates of the `<GridCell/>` children and adds them sized as `1fr`.
 
 When placing the grid-cells, you can also specify that they span several rows or columns. In this example, cell (3, 1) is set to span 2 columns, and cell (1, 3) is set to span 3 rows.
 
@@ -213,7 +292,15 @@ Now, the (1, 3) cell contains a nested `<Grid/>`.
 
 ## common app layout (grid areas)
 
-A common app layout has a header or menu bar at the top of the page,  a footer at the bottom of the page, a navigation sidebar on the left-hand side of the page, between the header and the footer, possibly an aside panel on the right-hand side of the page, an the main content nested snugly in the center. It would also be nice to name these areas and reference them by name. `grid-areas` are a basic feature of `css-grid` which is implemented in the `<Grid/>` component. The following example code shows how to do this with `<Grid/>` and also how to control which `<GridCells/>` are displayed using the `<GridCell/>`'s `isVisible` property.
+A common app layout has:
+
+* a header or menu bar at the top of the page, 
+* a footer at the bottom of the page,
+* a navigation sidebar on the left-hand side of the page, between the header and the footer,
+* possibly an aside panel on the right-hand side of the page, 
+* a main content nested snugly in the center. 
+  
+It would also be nice to name these areas and reference them by name. `grid-areas` are a basic feature of `css-grid` which is implemented in the `<Grid/>` component. The following example code shows how to do this with `<Grid/>` and also how to control which `<GridCells/>` are displayed using the `<GridCell/>`'s `isVisible` property.
 
 Notice that we have added a `gridTemplateAreas` property to outer the `<Grid/>`. Using the `gridTemplateAreasBuilder` we can add areas to the grid using the `addArea(name, area)` method. A grid-area has a name associated with an area (the set of cells bounded by 4 grid-lines). The `gridArea(row, col, spannedRows, spannedCols)` helper function makes it easy to define the area. All we need to do is specify the starting (row, column) and then the number of rows and columns the area spans. In our example, we've added grid-area called `header` that starts in the first row and column of the grid, spans 1 row, and spans all the columns of the grid. The `sidebar` starts on the second row of the first column and spans only one row and one column (the default values for row and column spanning).
 
