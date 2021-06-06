@@ -6,6 +6,9 @@ The react-grid-layout provides a grid layout, based on [css-grid](https://www.w3
 
 Check out the [css-grid](https://css-tricks.com/snippets/css/complete-guide-grid/) primer for more details on css-grid, and the [react-grid-layout-example](https://github.com/robphilipp/react-grid-layout-example) repo for an example app.
 
+## try it
+[code sandbox](https://codesandbox.io/s/react-resizable-grid-layout-example-4vw49?file=/src/App.tsx)
+
 ## to use in your project
 To include in your project
 ```shell
