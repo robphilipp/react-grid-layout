@@ -1,5 +1,8 @@
 # change history
 
+## version 0.2.1 (link to code-sandbox example)
+Added link in [README.md](./README.md) for [code sandbox](https://codesandbox.io/s/react-resizable-grid-layout-example-4vw49?file=/src/App.tsx) example
+
 ## version 0.2.0 (deprecated GridCell)
 1. Deprecated GridCell and replaced it with GridItem to align with the css-grid terminology. Added warnings when the GridCell is used.
 2. Updated the docs to replace GridCell with GridItem and added section on grid-areas.
