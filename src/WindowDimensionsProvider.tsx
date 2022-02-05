@@ -6,10 +6,6 @@ const initialDimensions = {
     width: 0,
     height: 0,
 }
-// const initialDimensions = {
-//     width: window.innerWidth,
-//     height: window.innerHeight,
-// }
 
 const WindowDimensionsContext = createContext<UseDimensionValues>(initialDimensions)
 
