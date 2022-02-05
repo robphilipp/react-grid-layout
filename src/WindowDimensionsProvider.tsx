@@ -3,9 +3,13 @@ import {createContext, useCallback, useContext, useEffect, useRef, useState} fro
 import {Dimensions, resizeThresholdExceeded, UseDimensionValues} from "./dimensions";
 
 const initialDimensions = {
-    width: window.innerWidth,
-    height: window.innerHeight,
+    width: 0,
+    height: 0,
 }
+// const initialDimensions = {
+//     width: window.innerWidth,
+//     height: window.innerHeight,
+// }
 
 const WindowDimensionsContext = createContext<UseDimensionValues>(initialDimensions)
 
@@ -16,7 +20,7 @@ interface Props {
 export function WindowDimensionsProvider(props: Props): JSX.Element {
     const {children} = props;
 
-    const currentDimensionsRef = useRef<Dimensions>({width: 0, height: 0})
+    const currentDimensionsRef = useRef<Dimensions>(initialDimensions)
     const [dimensions, setDimensions] = useState<Dimensions>(initialDimensions)
     const updateDimensions = useCallback(
         () => {

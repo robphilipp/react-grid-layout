@@ -3,6 +3,7 @@
     "target": "es5",
     "lib": ["es2019", "dom"],
     "module": "commonjs",
+    "rootDir": "./",
     "moduleResolution": "node",
     "declaration": true,
     "declarationMap": true,
@@ -15,5 +16,5 @@
     "skipLibCheck": true,
     "jsx": "react",
   },
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist", "src/setupTests.ts"]
 }
