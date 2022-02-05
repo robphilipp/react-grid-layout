@@ -295,6 +295,6 @@ export function trackIndexFor(identifier: number | string, template: GridTrackTe
  * @return an array that holds the grid line-names
  */
 export function gridLineNamesFor(template: GridTrackTemplate): Array<string> {
-    return Array.from(new Set(template.trackList.flatMap(track => track.lineNames?.names || [])))
+    return Array.from(new Set(template.trackList.flatMap((track: GridTrack) => track.lineNames?.names || [])))
 }
 
