@@ -1,5 +1,9 @@
 # change history
 
+## version 0.3.0 (nextjs fix)
+1. Updated `tsconfig.json` to produce modules the work with NextJs
+2. Updated the `WindowDimensionProvider` to work with NextJs
+
 ## version 0.2.1 (link to code-sandbox example)
 Added link in [README.md](./README.md) for [code sandbox](https://codesandbox.io/s/react-resizable-grid-layout-example-4vw49?file=/src/App.tsx) example
 
