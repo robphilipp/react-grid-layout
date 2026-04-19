@@ -48,6 +48,13 @@
     "README.md",
     "changes.md",
     "dist/**",
-    "src/**"
+    "src/index.ts",
+    "src/dimensions.ts",
+    "src/Flex.tsx",
+    "src/Grid.tsx",
+    "src/GridErrorBoundary.tsx",
+    "src/gridTemplateAreas.ts",
+    "src/gridTemplates.ts",
+    "src/WindowDimensionsProvider.tsx"
   ]
 }
