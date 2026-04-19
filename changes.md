@@ -1,5 +1,8 @@
 # change history
 
+## version 0.3.1 (source map warning fix)
+Added files to package.json so that users of this library don't get source map warnings
+
 ## version 0.3.0 (nextjs fix)
 1. Updated `tsconfig.json` to produce modules the work with NextJs
 2. Updated the `WindowDimensionProvider` to work with NextJs
